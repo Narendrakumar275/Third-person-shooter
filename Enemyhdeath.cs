@@ -2,28 +2,41 @@ using UnityEngine;
 
 public class Enemyhdeath : MonoBehaviour
 {
-    public int enemyHealth = 100;
-    public int enemyDamage = 30;
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.tag == "bullet")
-        {
-            TakeDamage(30);
-        }
-    }
-    public void TakeDamage(int damage)
-    {
-        enemyHealth -= damage;
+    public float health = 100f;
+    public Animator animator;
+    public float destroyDelay = 3f;
 
-        if (enemyHealth <= 0)
+    bool isDead = false;
+
+    public void TakeDamage(float amount)
+    {
+        if (isDead) return;
+
+        health -= amount;
+
+        if (health <= 0f)
         {
-            Debug.Log("Enemy is dead");
             Die();
         }
     }
 
     void Die()
     {
-        Destroy(gameObject);
+        isDead = true;
+
+        Debug.Log("Enemy Died");
+
+        if (animator != null)
+        {
+            animator.SetTrigger("death01");
+        }
+
+        Collider col = GetComponent<Collider>();
+        if (col != null)
+        {
+            col.enabled = false;
+        }
+
+        Destroy(gameObject, destroyDelay);
     }
 }
