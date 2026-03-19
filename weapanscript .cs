@@ -1,55 +1,83 @@
 using UnityEngine;
 
-public class Weapanscript : MonoBehaviour
+public class weapanscript : MonoBehaviour
 {
-    [SerializeField] Rigidbody bulletPrefab;
-    [SerializeField] Transform firePoint;
-    [SerializeField] float bulletSpeed = 90f;
-    [SerializeField] float reloadTime = 0.3f;
-    [SerializeField] float bulletLife = 3f;
-    [SerializeField] ParticleSystem muzzleFlash;
-    [SerializeField] Camera aimCamera;
+    public float damage = 20f;
+    public float range = 100f;
 
-    float nextFireTime;
+    public Camera cam;
+    public AudioSource audioSource;
+    public AudioClip shootSound;
+
+    public GameObject shootEffect;
+    public GameObject enemyHitEffect;
+    public GameObject groundHitEffect;
+
+    public Transform firePoint;
+
+    void Start()
+    {
+        if (cam == null)
+            cam = Camera.main;
+
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
+    }
 
     void Update()
     {
-        if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
+        if (!gameObject.activeInHierarchy) return;
+
+        if (Input.GetMouseButtonDown(0))
         {
-            Fire();
-            nextFireTime = Time.time + reloadTime;
+            Shoot();
         }
     }
 
-    void Fire()
+    void Shoot()
     {
-        if (muzzleFlash != null)
-            muzzleFlash.Play();
+        if (shootSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(shootSound);
+        }
 
-        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        if (shootEffect != null && firePoint != null)
+        {
+            GameObject effect = Instantiate(shootEffect, firePoint.position, firePoint.rotation);
+            Destroy(effect, 0.5f);
+        }
 
+        Ray ray = cam.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
         RaycastHit hit;
-        Vector3 targetPoint;
 
-        if (Physics.Raycast(ray, out hit, 200f))
+        if (Physics.Raycast(ray, out hit, range))
         {
-            targetPoint = hit.point;
+            GameObject impactEffect = null;
+
+            if (hit.transform.CompareTag("enemy"))
+            {
+                impactEffect = enemyHitEffect;
+
+                Enemyhdeath Enemy = hit.transform.GetComponent<Enemyhdeath>();
+                if (Enemy != null)
+                {
+                    Enemy.TakeDamage(damage);
+                }
+            }
+            else
+            {
+                impactEffect = groundHitEffect;
+            }
+
+            if (impactEffect != null)
+            {
+                GameObject impact = Instantiate(
+                    impactEffect,
+                    hit.point,
+                    Quaternion.LookRotation(hit.normal)
+                );
+                Destroy(impact, 1f);
+            }
         }
-        else
-        {
-            targetPoint = ray.origin + ray.direction * 200f;
-        }
-
-        Vector3 direction = (targetPoint - firePoint.position).normalized;
-
-        Rigidbody bullet = Instantiate(
-            bulletPrefab,
-            firePoint.position,
-            Quaternion.LookRotation(direction)
-        );
-
-        bullet.velocity = direction * bulletSpeed;
-
-        Destroy(bullet.gameObject, bulletLife);
     }
 }
