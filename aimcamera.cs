@@ -69,8 +69,7 @@ public class aimcamera : MonoBehaviour
             Vector3.up * height -
             targetRotation * Vector3.forward * distance +
             targetRotation * Vector3.right * rightOffset;
-
-        // 🔥 Smooth Position
+// smooth position
         normalCamera.transform.position = Vector3.SmoothDamp(
             normalCamera.transform.position,
             targetPosition,
@@ -80,7 +79,7 @@ public class aimcamera : MonoBehaviour
 
         aimCamera.transform.position = normalCamera.transform.position;
 
-        // 🔥 Smooth Rotation
+        // smooth rotation
         normalCamera.transform.rotation = Quaternion.Lerp(
             normalCamera.transform.rotation,
             targetRotation,
